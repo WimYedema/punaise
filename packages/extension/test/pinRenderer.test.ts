@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import * as vscode from "vscode";
 import { PinStore } from "@punaise/core";
-import { renderPins } from "../src/pinRenderer";
+import { openPin, renderPins } from "../src/pinRenderer";
 import { CodeHighlighter } from "../src/highlighter";
 import { renderPinboardHtml } from "../src/pinboardView";
 
@@ -62,6 +62,36 @@ suite("Pin cards", () => {
     highlighter.reset();
     const dark = (await renderPins(pins().list(), new Set(), highlighter)).css;
     assert.notEqual(light, dark);
+  });
+
+  test("every card header has an open-in-editor link", async () => {
+    const { html } = await renderPins(pins().list(), new Set(), new CodeHighlighter());
+    assert.equal(html.match(/<button class="open" data-open="[^"]+"/g)?.length, 3);
+  });
+
+  test("the link opens the file at the symbol, in the active group", async () => {
+    await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+    const [run] = pins().list();
+    assert.ok(run);
+    assert.equal(await openPin(run), "opened");
+    const editor = vscode.window.activeTextEditor;
+    assert.ok(editor);
+    assert.ok(editor.document.fileName.endsWith("sample.ts"));
+    assert.equal(editor.viewColumn, vscode.ViewColumn.One);
+    assert.match(editor.document.lineAt(editor.selection.active.line).text, /^\s*run\(id: string, attempts = 1\): number \{/);
+  });
+
+  test("a pin that is not found opens its file at the top", async () => {
+    const renamed = pins().list()[2];
+    assert.ok(renamed);
+    assert.equal(await openPin(renamed), "opened");
+    assert.equal(vscode.window.activeTextEditor?.selection.active.line, 0);
+  });
+
+  test("a pin whose file is gone reports it", async () => {
+    const store = new PinStore();
+    const { pin } = store.add({ path: "deleted.ts", symbol: { name: "x", kind: "function", container: [] } });
+    assert.equal(await openPin(pin), "fileMissing");
   });
 
   test("long bodies scroll inside the card", () => {

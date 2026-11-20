@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { ThemedToken } from "shiki/core";
-import { findSymbol, signatureLineCount, type SymbolPin } from "@punaise/core";
+import { findSymbol, signatureLineCount, type SymbolNode, type SymbolPin } from "@punaise/core";
 import { fetchSymbols, toNode } from "./pinCommand";
 import { StyleClasses, type CodeHighlighter } from "./highlighter";
 
@@ -19,7 +19,8 @@ export async function renderPins(pins: readonly SymbolPin[], expanded: ReadonlyS
 
 async function renderCard(pin: SymbolPin, open: boolean, highlighter: CodeHighlighter, classes: StyleClasses): Promise<string> {
   const title = escapeHtml([...pin.symbol.container, pin.symbol.name].join(" › "));
-  const header = `<span class="name">${title}</span> <span class="kind">${pin.symbol.kind}</span> <span class="path">${escapeHtml(pin.path)}</span>`;
+  const link = `<button class="open" data-open="${escapeHtml(pin.id)}" title="Open in editor" aria-label="Open ${title} in editor">↗</button>`;
+  const header = `<span class="name">${title}</span> <span class="kind">${pin.symbol.kind}</span> <span class="path">${escapeHtml(pin.path)}</span>${link}`;
   const code = await loadCode(pin, highlighter);
   if (!code) {
     return `<div class="pin unresolved"><div class="header">${header}</div><p class="note">Not found in ${escapeHtml(pin.path)}.</p></div>`;
@@ -39,19 +40,40 @@ interface Code {
 
 /** The pinned symbol's lines, highlighted in the context of the whole file and dedented. */
 async function loadCode(pin: SymbolPin, highlighter: CodeHighlighter): Promise<Code | undefined> {
-  const uri = await locate(pin.path);
-  if (!uri) return undefined;
-  const document = await vscode.workspace.openTextDocument(uri);
-  const symbols = await fetchSymbols(uri, 5000);
-  if (!symbols?.every((s) => "children" in s)) return undefined;
-  const node = findSymbol((symbols as vscode.DocumentSymbol[]).map(toNode), pin.symbol);
-  if (!node) return undefined;
+  const resolved = await resolvePin(pin);
+  if (!resolved?.node) return undefined;
+  const { document, node } = resolved;
 
   const { start, end } = node.range;
   const text = Array.from({ length: end.line - start.line + 1 }, (_, i) => document.lineAt(start.line + i).text);
   const tokens = (await highlighter.tokenize(document))?.slice(start.line, end.line + 1) ?? text.map((line) => [{ content: line, offset: 0 }]);
   const indent = Math.min(...text.filter((line) => line.trim()).map((line) => line.length - line.trimStart().length));
   return { lines: tokens.map((line) => dropPrefix(line, indent)), signatureLines: signatureLineCount(text) };
+}
+
+/** Opens the pin's file and finds its symbol. `node` is undefined when the symbol is not found. */
+async function resolvePin(pin: SymbolPin): Promise<{ document: vscode.TextDocument; node?: SymbolNode } | undefined> {
+  const uri = await locate(pin.path);
+  if (!uri) return undefined;
+  const document = await vscode.workspace.openTextDocument(uri);
+  const symbols = await fetchSymbols(uri, 5000);
+  const hierarchical = symbols?.every((s) => "children" in s) ? (symbols as vscode.DocumentSymbol[]) : undefined;
+  return { document, node: hierarchical && findSymbol(hierarchical.map(toNode), pin.symbol) };
+}
+
+/** Opens the pin's file in the active editor group at its symbol, or at the top if the symbol is not found. */
+export async function openPin(pin: SymbolPin): Promise<"opened" | "fileMissing"> {
+  const resolved = await resolvePin(pin);
+  if (!resolved) {
+    void vscode.window.showWarningMessage(`Punaise: ${pin.path} could not be found in the workspace.`);
+    return "fileMissing";
+  }
+  const { start, end } = resolved.node?.range ?? { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } };
+  const range = new vscode.Range(start.line, start.character, end.line, end.character);
+  const editor = await vscode.window.showTextDocument(resolved.document, { viewColumn: vscode.ViewColumn.Active });
+  editor.selection = new vscode.Selection(range.start, range.start);
+  editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
+  return "opened";
 }
 
 /** Finds a workspace-relative path in the first workspace folder that has it. */

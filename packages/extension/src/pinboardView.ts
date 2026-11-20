@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { randomBytes } from "node:crypto";
 import { PRODUCT_NAME, type PinStore } from "@punaise/core";
-import { renderPins, type RenderedPins } from "./pinRenderer";
+import { openPin, renderPins, type RenderedPins } from "./pinRenderer";
 import { CodeHighlighter } from "./highlighter";
 
 /** Renders the pinboard. The webview only displays what the host gives it. */
@@ -50,9 +50,14 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
   /** The webview reports cards being opened or closed, so a re-render keeps them that way. */
   private onMessage(message: unknown): void {
     const m = message as { type?: unknown; id?: unknown; open?: unknown };
-    if (m?.type !== "toggle" || typeof m.id !== "string") return;
-    if (m.open === true) this.expanded.add(m.id);
-    else this.expanded.delete(m.id);
+    if (typeof m?.id !== "string") return;
+    if (m.type === "toggle") {
+      if (m.open === true) this.expanded.add(m.id);
+      else this.expanded.delete(m.id);
+    } else if (m.type === "open") {
+      const pin = this.store.list().find((p) => p.id === m.id);
+      if (pin) void openPin(pin);
+    }
   }
 }
 
@@ -63,6 +68,13 @@ window.scrollTo(0, (vscode.getState() || {}).scrollY || 0);
 addEventListener("scroll", () => vscode.setState({ scrollY: window.scrollY }));
 for (const card of document.querySelectorAll("details[data-id]")) {
   card.addEventListener("toggle", () => vscode.postMessage({ type: "toggle", id: card.dataset.id, open: card.open }));
+}
+for (const link of document.querySelectorAll("button[data-open]")) {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    vscode.postMessage({ type: "open", id: link.dataset.open });
+  });
 }`;
 
 /** Strict CSP: only nonce-tagged style and script, no other sources, no network. */
@@ -91,6 +103,10 @@ export function renderPinboardHtml(nonce: string, content: RenderedPins = { html
     .name { font-weight: 600; overflow-wrap: anywhere; }
     .kind, .path { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
     .path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .open { margin-left: auto; padding: 0 2px; border: none; background: none; font: inherit; cursor: pointer;
+      color: var(--vscode-textLink-foreground); }
+    .open:hover { color: var(--vscode-textLink-activeForeground); }
+    .open:focus-visible { outline: 1px solid var(--vscode-focusBorder); }
     .code { margin: 0; padding: 4px 6px; overflow-x: auto; white-space: pre; tab-size: 4; line-height: 1.4;
       font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); color: var(--vscode-editor-foreground); }
     details[open] .signature { display: none; }

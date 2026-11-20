@@ -124,10 +124,13 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-007 Navigate from pin to source
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006
-- **Description:** Clicking a pin's header opens the file in the editor and reveals the symbol's range.
-- **Acceptance criteria:** Clicking a header opens the right file at the right symbol, in the active editor group.
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006
+- **Description:** Each card header has a small "open in editor" link. Clicking it opens the file in the editor and reveals the symbol's range. Clicking the rest of the header keeps expanding and collapsing the card.
+- **Acceptance criteria:**
+  - Clicking the link opens the right file at the right symbol, in the active editor group, without toggling the card.
+  - For a pin shown as not found, the link opens the file, or explains that the file is missing.
 - **Out of scope:** opening in a split, peek views.
+- **Note:** Changed before starting, at the human's request: navigation moved from the header to a separate `↗` link so the header keeps toggling the card. The symbol is re-resolved on click.
 
 ### PUN-008 Keep pins live
 
