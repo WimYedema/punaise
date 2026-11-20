@@ -2,7 +2,7 @@
   "name": "punaise",
   "displayName": "Punaise",
   "description": "Keep the code you are reasoning about in view.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "publisher": "ienfald",
   "preview": true,

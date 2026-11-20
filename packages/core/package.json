@@ -1,6 +1,6 @@
 {
   "name": "@punaise/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Editor-independent core of Punaise. Must never import vscode.",
   "license": "MIT",

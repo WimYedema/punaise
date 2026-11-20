@@ -67,7 +67,8 @@ describe("signatureLineCount", () => {
     assert.equal(signatureLineCount(["export const arrow = (s: string): string => s.trim();"]), 1);
   });
 
-  test("caps the signature length", () => {
-    assert.equal(signatureLineCount(Array.from({ length: 20 }, () => "a,"), 8), 8);
+  test("falls back to the first line when no line ends a signature", () => {
+    assert.equal(signatureLineCount(["## Install", "", "Punaise is available as an alpha.", "", "```sh", "npm install", "```"]), 1);
+    assert.equal(signatureLineCount(Array.from({ length: 20 }, () => "a,"), 8), 1);
   });
 });

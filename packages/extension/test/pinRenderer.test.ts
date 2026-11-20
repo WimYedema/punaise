@@ -4,6 +4,7 @@ import { PinStore } from "@punaise/core";
 import { openPin, renderPins } from "../src/pinRenderer";
 import { CodeHighlighter } from "../src/highlighter";
 import { renderPinboardHtml } from "../src/pinboardView";
+import { pinCurrentSymbol } from "../src/pinCommand";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<");
 
@@ -93,6 +94,28 @@ suite("Pin cards", () => {
     const store = new PinStore();
     const { pin } = store.add({ path: "deleted.ts", symbol: { name: "x", kind: "function", container: [] } });
     assert.equal(await openPin(pin), "fileMissing");
+  });
+
+  test("a pinned Markdown section shows only its heading when collapsed", async () => {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    assert.ok(folder);
+    const uri = vscode.Uri.joinPath(folder.uri, "notes.md");
+    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode("# Notes\n\n## Install\n\nRun the installer.\n\nThen reload.\n"));
+    try {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(document);
+      const position = document.positionAt(document.getText().indexOf("Run the installer"));
+      editor.selection = new vscode.Selection(position, position);
+      const outcome = await pinCurrentSymbol(new PinStore());
+      assert.ok("result" in outcome, `pinned a Markdown section (${outcome.kind})`);
+      const { html } = await renderPins([outcome.result.pin], new Set(), new CodeHighlighter());
+      const signature = text(html.match(/<pre class="code signature">([\s\S]*?)<\/pre>/)?.[1] ?? "");
+      assert.equal(signature, "## Install");
+      assert.match(text(html.match(/<pre class="code body">([\s\S]*?)<\/pre>/)?.[1] ?? ""), /Run the installer\.[\s\S]*Then reload\./);
+    } finally {
+      await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+      await vscode.workspace.fs.delete(uri);
+    }
   });
 
   test("long bodies scroll inside the card", () => {
