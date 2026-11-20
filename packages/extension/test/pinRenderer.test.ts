@@ -67,6 +67,7 @@ suite("Pin cards", () => {
   test("every card header has an open-in-editor link", async () => {
     const { html } = await renderPins(pins().list(), new Set(), new CodeHighlighter());
     assert.equal(html.match(/<button class="open" data-open="[^"]+"/g)?.length, 3);
+    assert.equal(html.match(/<button class="remove" data-remove="[^"]+"/g)?.length, 3, "and a remove button");
   });
 
   test("the link opens the file at the symbol, in the active group", async () => {

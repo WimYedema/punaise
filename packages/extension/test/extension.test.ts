@@ -1,6 +1,6 @@
 import * as assert from "node:assert/strict";
 import * as vscode from "vscode";
-import { supportsSecondarySidebar } from "../src/extension";
+import { defaultKeybinding, supportsSecondarySidebar } from "../src/extension";
 import { renderPinboardHtml } from "../src/pinboardView";
 
 suite("Punaise extension", () => {
@@ -19,6 +19,21 @@ suite("Punaise extension", () => {
     assert.equal(supportsSecondarySidebar("1.105.2"), false);
     assert.equal(supportsSecondarySidebar("1.106.0"), true);
     assert.equal(supportsSecondarySidebar("2.0.0"), true);
+  });
+
+  test("the empty state shows the default keybinding for the platform", () => {
+    const manifest = vscode.extensions.getExtension("punaise.punaise")?.packageJSON;
+    assert.equal(defaultKeybinding(manifest, "win32"), "Alt+P");
+    assert.equal(defaultKeybinding(manifest, "darwin"), "Cmd+Alt+P");
+    const empty = renderPinboardHtml("n", undefined, "", "Alt+P");
+    assert.match(empty, /press <kbd>Alt\+P<\/kbd>/);
+    assert.match(empty, /data-dismiss="hint">Don't show again/);
+  });
+
+  test("a dismissed hint, or any pins, hide the call to action", () => {
+    assert.doesNotMatch(renderPinboardHtml("n", undefined, "", undefined), /<kbd>/);
+    assert.match(renderPinboardHtml("n", undefined, "", undefined), /No pins yet/);
+    assert.doesNotMatch(renderPinboardHtml("n", { html: "<details></details>", css: "" }, "", "Alt+P"), /<kbd>|No pins yet/);
   });
 
   test("webview HTML has a strict CSP and only nonce-tagged inline script", () => {

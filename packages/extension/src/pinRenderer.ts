@@ -63,7 +63,9 @@ function sourceOf(pin: SymbolPin, file: ResolvedFile | undefined): Source {
 async function renderCard(pin: SymbolPin, source: Source, context: RenderContext): Promise<string> {
   const id = escapeHtml(pin.id);
   const title = escapeHtml([...pin.symbol.container, pin.symbol.name].join(" › "));
-  const link = `<button class="open" data-open="${id}" title="Open in editor" aria-label="Open ${title} in editor">↗</button>`;
+  const link =
+    `<button class="open" data-open="${id}" title="Open in editor" aria-label="Open ${title} in editor">↗</button>` +
+    `<button class="remove" data-remove="${id}" title="Remove pin" aria-label="Remove pin ${title}">×</button>`;
   const header = `<span class="name">${title}</span> <span class="kind">${pin.symbol.kind}</span> <span class="path">${escapeHtml(pin.path)}</span>${link}`;
   const { document, path, lines: text } = source;
   const top = path?.[0];

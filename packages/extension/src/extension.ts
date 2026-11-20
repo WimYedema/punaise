@@ -11,15 +11,31 @@ export function supportsSecondarySidebar(version: string): boolean {
   return major > 1 || (major === 1 && minor >= 106);
 }
 
+interface Manifest {
+  contributes?: { keybindings?: { command: string; key?: string; mac?: string }[] };
+}
+
+/** The pin command's default keybinding, e.g. "Alt+P". VS Code does not tell extensions about rebindings. */
+export function defaultKeybinding(manifest: Manifest, platform: string): string | undefined {
+  const binding = manifest.contributes?.keybindings?.find((k) => k.command === "punaise.pinCurrentSymbol");
+  const key = platform === "darwin" ? (binding?.mac ?? binding?.key) : binding?.key;
+  return key?.split("+").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("+");
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   const secondary = supportsSecondarySidebar(vscode.version);
   if (!secondary) {
     void vscode.commands.executeCommand("setContext", "punaise.noSecondarySidebar", true);
   }
   const store = new PinStore();
-  const provider = new PinboardViewProvider(store, (index) => {
-    const result = strip.pin(index);
-    if (result) void afterPin({ kind: result.added ? "pinned" : "alreadyPinned", result });
+  const provider = new PinboardViewProvider(store, {
+    onPinCandidate: (index) => {
+      const result = strip.pin(index);
+      if (result) void afterPin({ kind: result.added ? "pinned" : "alreadyPinned", result });
+    },
+    onRemoved: () => provider.setStrip(strip.html()),
+    keybinding: defaultKeybinding(context.extension.packageJSON, process.platform),
+    state: context.globalState,
   });
   const strip = new CandidateStrip(store, (html) => provider.setStrip(html));
   const afterPin = async (outcome: PinOutcome) => {

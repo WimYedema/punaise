@@ -4,6 +4,18 @@ import { PRODUCT_NAME, type PinStore } from "@punaise/core";
 import { openPin, renderCards, type RenderContext, type RenderedPins } from "./pinRenderer";
 import { CodeHighlighter, StyleClasses } from "./highlighter";
 
+export interface PinboardOptions {
+  onPinCandidate?: (index: number) => void;
+  /** Runs after a pin is removed from the panel. */
+  onRemoved?: () => void;
+  /** The pin command's default keybinding, for the empty-state hint. */
+  keybinding?: string;
+  /** Remembers a dismissed empty-state hint across sessions. */
+  state?: vscode.Memento;
+}
+
+const HINT_DISMISSED = "punaise.emptyHintDismissed";
+
 /** Renders the pinboard. The webview only displays what the host gives it. */
 export class PinboardViewProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
@@ -16,7 +28,7 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly store: PinStore,
-    private readonly onPinCandidate: (index: number) => void = () => undefined,
+    private readonly options: PinboardOptions = {},
   ) {}
 
   /** Replaces the candidate strip (PUN-022) without touching the cards. */
@@ -45,7 +57,8 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
       this.context = this.newContext();
       const cards = await renderCards(this.store.list(), this.context);
       const content = { html: cards.map((card) => card.html).join("\n"), css: this.context.classes.css() };
-      if (this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content, this.strip);
+      const hint = this.options.state?.get<boolean>(HINT_DISMISSED) ? undefined : this.options.keybinding;
+      if (this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content, this.strip, hint);
     });
   }
 
@@ -86,7 +99,11 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
   /** The webview reports cards being opened or closed, so a re-render keeps them that way. */
   private onMessage(message: unknown): void {
     const m = message as { type?: unknown; id?: unknown; open?: unknown; index?: unknown };
-    if (m?.type === "pinCandidate" && typeof m.index === "number") return this.onPinCandidate(m.index);
+    if (m?.type === "pinCandidate" && typeof m.index === "number") return this.options.onPinCandidate?.(m.index);
+    if (m?.type === "dismissHint") {
+      void this.options.state?.update(HINT_DISMISSED, true).then(() => this.refresh());
+      return;
+    }
     if (typeof m?.id !== "string") return;
     if (m.type === "toggle") {
       if (m.open === true) this.expanded.add(m.id);
@@ -94,6 +111,10 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
     } else if (m.type === "open") {
       const pin = this.store.list().find((p) => p.id === m.id);
       if (pin) void openPin(pin);
+    } else if (m.type === "remove" && this.store.remove(m.id)) {
+      this.expanded.delete(m.id);
+      this.options.onRemoved?.();
+      void this.refresh();
     }
   }
 }
@@ -112,13 +133,15 @@ document.addEventListener("toggle", (event) => {
   if (card instanceof HTMLDetailsElement && card.dataset.id) vscode.postMessage({ type: "toggle", id: card.dataset.id, open: card.open });
 }, true);
 document.addEventListener("click", (event) => {
-  const chip = event.target instanceof Element && event.target.closest("button[data-candidate]");
-  if (chip) vscode.postMessage({ type: "pinCandidate", index: Number(chip.dataset.candidate) });
-  const link = event.target instanceof Element && event.target.closest("button[data-open]");
-  if (!link) return;
-  event.preventDefault();
+  const button = event.target instanceof Element && event.target.closest("button[data-candidate], button[data-open], button[data-remove], button[data-dismiss]");
+  if (!button) return;
+  event.preventDefault(); // buttons in a card header must not toggle the card
   event.stopPropagation();
-  vscode.postMessage({ type: "open", id: link.dataset.open });
+  const data = button.dataset;
+  if (data.candidate !== undefined) vscode.postMessage({ type: "pinCandidate", index: Number(data.candidate) });
+  else if (data.open) vscode.postMessage({ type: "open", id: data.open });
+  else if (data.remove) vscode.postMessage({ type: "remove", id: data.remove });
+  else vscode.postMessage({ type: "dismissHint" });
 }, true);
 addEventListener("message", (event) => {
   if (event.data?.type === "strip") document.getElementById("strip").innerHTML = event.data.html;
@@ -131,9 +154,13 @@ addEventListener("message", (event) => {
 });`;
 
 /** Strict CSP: only nonce-tagged style and script, no other sources, no network. */
-export function renderPinboardHtml(nonce: string, content: RenderedPins = { html: "", css: "" }, strip = ""): string {
+export function renderPinboardHtml(nonce: string, content: RenderedPins = { html: "", css: "" }, strip = "", keybinding?: string): string {
   const csp = `default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';`;
-  const body = content.html || "<p>No pins yet.</p>";
+  const hint = keybinding
+    ? `<p class="empty">Put the cursor in a function or class and click it above, or press <kbd>${keybinding}</kbd>.
+  <button class="link" data-dismiss="hint">Don't show again</button></p>`
+    : "<p>No pins yet.</p>";
+  const body = content.html || hint;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,10 +183,13 @@ export function renderPinboardHtml(nonce: string, content: RenderedPins = { html
     .name { font-weight: 600; overflow-wrap: anywhere; }
     .kind, .path { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
     .path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .open { margin-left: auto; padding: 0 2px; border: none; background: none; font: inherit; cursor: pointer;
+    .open, .remove, .link { padding: 0 2px; border: none; background: none; font: inherit; cursor: pointer;
       color: var(--vscode-textLink-foreground); }
-    .open:hover { color: var(--vscode-textLink-activeForeground); }
-    .open:focus-visible { outline: 1px solid var(--vscode-focusBorder); }
+    .open { margin-left: auto; }
+    .remove { color: var(--vscode-descriptionForeground); }
+    .open:hover, .remove:hover, .link:hover { color: var(--vscode-textLink-activeForeground); }
+    .open:focus-visible, .remove:focus-visible, .link:focus-visible { outline: 1px solid var(--vscode-focusBorder); }
+    kbd { font-family: var(--vscode-editor-font-family); padding: 0 3px; border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); border-radius: 3px; }
     .code { margin: 0; padding: 4px 6px; overflow-x: auto; white-space: pre; tab-size: 4; line-height: 1.4;
       font-family: var(--vscode-editor-font-family); font-size: var(--vscode-editor-font-size); color: var(--vscode-editor-foreground); }
     details[open] .signature { display: none; }

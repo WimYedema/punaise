@@ -158,10 +158,11 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-009 Remove pins and empty state
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006, PUN-022
-- **Description:** Each card has a remove action. When there are no pins, the panel shows the candidate strip (PUN-022) and a single call to action: put the cursor in a function and click it in the strip, or press the pin shortcut (showing the actual keybinding).
-- **Acceptance criteria:** Removing the last pin shows the empty state; the empty state shows the real keybinding.
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006, PUN-022
+- **Description:** Each card has a remove action. When there are no pins, the panel shows the candidate strip (PUN-022) and a single call to action: put the cursor in a function and click it in the strip, or press the pin shortcut (showing its default keybinding: VS Code does not tell extensions about rebindings). The hint has a "Don't show again" link, remembered across sessions.
+- **Acceptance criteria:** Removing the last pin shows the empty state; the empty state shows the default keybinding for the platform; after "Don't show again" the hint stays hidden.
 - **Out of scope:** undo for removal.
+- **Note:** Changed before starting, with the human: VS Code gives extensions no way to read a rebound keybinding, so the hint shows the manifest default and can be dismissed (stored in `globalState`).
 
 ### PUN-010 Phase 0 validation
 
@@ -199,3 +200,4 @@ These items are placeholders with rough estimates and no tier yet. They are refi
 | PUN-019 | Selection pins and documentation view | M | |
 | PUN-020 | Recruit two or three external testers | human | Start during Phase 0; recruiting takes longer than building |
 | PUN-024 | Pins in the editor: a pin icon in the gutter next to pinned symbols, plus a way to pin from the code itself | S–M | Extensions cannot handle gutter clicks, so options are the line-number context menu, a CodeLens (noisy; maybe only at the cursor) or a hover action |
+| PUN-025 | Usage tips in the empty state and quiet panel moments: rotate short tips (pin from the strip, open link, follow-cursor, export), each dismissible | S | Builds on PUN-009's dismissible hint; keep tips short and never more than one at a time |
