@@ -108,7 +108,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - If the cursor is not inside a symbol, the user gets a clear message.
   - Integration test covers pinning in a TypeScript fixture.
 - **Out of scope:** selection pins, rendering beyond the pin's name (PUN-006).
-- **Note:** Default keybinding `Ctrl+Alt+P` (`Cmd+Alt+P` on macOS). Symbol choice lives in core (`symbolAtPosition`) and skips parameters and locals. Retries up to 10 s while a language server starts. Python with Pylance verified manually with the PUN-003 setup; the automated test covers TypeScript only, as specified.
+- **Note:** Default keybinding `Alt+P` (`Cmd+Alt+P` on macOS); `Ctrl+Alt+P` was dropped because Ctrl+Alt acts as AltGr on many Windows layouts. Symbol choice lives in core (`symbolAtPosition`) and skips parameters and locals. Retries up to 10 s while a language server starts. Python with Pylance verified manually with the PUN-003 setup; the automated test covers TypeScript only, as specified.
 
 ### PUN-006 Render pins: header, signature and code views
 

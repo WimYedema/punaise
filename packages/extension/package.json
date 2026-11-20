@@ -63,7 +63,7 @@
     "keybindings": [
       {
         "command": "punaise.pinCurrentSymbol",
-        "key": "ctrl+alt+p",
+        "key": "alt+p",
         "mac": "cmd+alt+p",
         "when": "editorTextFocus"
       }
