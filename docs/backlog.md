@@ -69,12 +69,13 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-002 Spike: theme-matched highlighting in a webview
 
-- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
+- **Status:** done · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
 - **Description:** Find out whether code in the webview can be highlighted so that it looks like the editor. Try Shiki in the webview, mapping the active VS Code colour theme to a Shiki theme. Check light, dark and high-contrast themes, and how the result reacts to a theme change.
 - **Acceptance criteria:**
   - `docs/spikes/highlighting.md` records: the approach, what worked, what did not, bundle-size impact, and a recommendation.
   - Screenshots or a clear description for at least three built-in themes.
 - **Out of scope:** production-quality rendering; it is built in PUN-006.
+- **Note:** Recommends Shiki in the extension host (not the webview) with the active theme file and VS Code's own grammars. PUN-006 needs approval for `shiki` as a runtime dependency. Spike code is on branch `spike/pun-002-highlighting`.
 
 ### PUN-003 Spike: symbol container chains from language servers
 
@@ -149,6 +150,10 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   4. What friction came up, and what was missing?
   5. Would pasting this set of pins into an agent have helped on the task?
 - **Acceptance criteria:** A written go/no-go decision for Phase 1, and an updated Phase 1 section in this backlog.
+
+### PUN-021 Clean build output before compiling tests
+
+- *Not ready.* The extension's `tsc` output folder (`packages/extension/out/`) is never cleaned, so compiled tests for deleted files (for example after switching branches) still run and can fail. Found during PUN-002.
 
 ## Phase 1: Personal MVP (not ready)
 
