@@ -68,7 +68,8 @@ The item asked to try Shiki in the webview. It works there too: the same 166 KB 
 - Load the active theme from its contributing extension (following `include`) and grammars from VS Code's installed extensions, so any language and theme the editor knows works without bundling.
 - Send class-based HTML plus a nonce-tagged stylesheet; keep the CSP strict.
 - Re-render all cards on `onDidChangeActiveColorTheme` and on changes to `editor.tokenColorCustomizations`.
-- Add `shiki` as a runtime dependency (about 166 KB minified), and set `"module": "Node20"` for the extension's `tsc` build. Both need a human's approval under AGENTS.md.
+- Add `shiki` as a runtime dependency (about 166 KB minified). This still needs a human's approval under AGENTS.md.
+- Set `"module": "Node20"` and `"moduleResolution": "Node20"` in `packages/extension/tsconfig.json`. **Approved** (2026-11-20): it only affects the `tsc` output used by integration tests, which would fail only if run on an older VS Code whose bundled Node is below 20.19 / 22.12 and so cannot `require()` ESM (VS Code 1.90 ships Node 20.9); the shipped esbuild bundle is unaffected.
 - Leave semantic-token overlay, `.tmTheme` themes and per-theme customizations for later items.
 
 The spike code is on the branch `spike/pun-002-highlighting`. With it checked out, press F5 to see the sample in the Punaise view; changing the colour theme re-renders it.

@@ -115,6 +115,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - Highlighting follows the active colour theme, including after a theme change.
   - Long bodies scroll inside the card rather than stretching the panel.
 - **Out of scope:** documentation view, reordering, persistence.
+- **Note:** Approved: set `module` and `moduleResolution` to `Node20` in the extension's tsconfig (see [highlighting spike](spikes/highlighting.md#recommendation-for-pun-006)). Adding `shiki` as a runtime dependency still needs approval.
 
 ### PUN-007 Navigate from pin to source
 
