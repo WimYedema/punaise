@@ -199,10 +199,6 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 - **Needs the human:** configure trusted publishing for this repository and workflow on the publisher page, then push the first tag.
 - **Note:** 0.1.0 was published on 2026-11-20 from tag `v0.1.0` through OIDC trusted publishing.
 
-### PUN-023 Pin symbols near the cursor
-
-- *Not ready.* Offer symbols that are textually close to the cursor as one-click pins, next to the candidate strip (PUN-022). Close means position in the file, not the call graph (that is D-4 and Phase 3). To decide: what counts as close (previous and next siblings, symbols visible in the editor, within N lines), how many to show, and whether it is a separate row or part of the strip.
-
 ### PUN-021 Clean build output before compiling tests
 
 - *Not ready.* The extension's `tsc` output folder (`packages/extension/out/`) is never cleaned, so compiled tests for deleted files (for example after switching branches) still run and can fail. Found during PUN-002.
@@ -218,6 +214,7 @@ Phase 1 ships as version `0.2.x` (see [versions](#versions)). These items are pl
 | PUN-013 | Reorder pins by drag and drop | S | |
 | PUN-014 | Follow-cursor modes (fixed, follow, manual, freeze) with a no-match fallback | L | Split before starting |
 | PUN-015 | Recent trail: last ~20 visited symbols, pinnable after the fact | M | From Journey 3 |
+| PUN-023 | Pin symbols near the cursor: offer symbols textually close to the cursor as one-click pins, next to the candidate strip | S | Close means position in the file, not the call graph (D-4, Phase 3). To decide: what counts as close (siblings, visible symbols, within N lines), how many, separate row or part of the strip. Below PUN-015 in priority |
 | PUN-016 | Pin notes: one short line per pin | S | Depends on D-1, D-5 |
 | PUN-017 | Local usage stats, including follow-cursor hit rate | S | No telemetry; visible only to the user |
 | PUN-018 | Lead status on pins (open, ruled out, confirmed) | S | Depends on D-1 |
