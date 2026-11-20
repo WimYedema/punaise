@@ -1,0 +1,11 @@
+# Only the bundle, the icon, the manifest and the license ship; esbuild already bundles all code.
+src/**
+test/**
+out/**
+node_modules/**
+.vscode-test/**
+.vscode-test.mjs
+esbuild.mjs
+tsconfig.json
+dist/**/*.map
+*.vsix

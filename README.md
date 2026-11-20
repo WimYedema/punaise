@@ -20,6 +20,18 @@ Punaise lets you pin the functions, classes and documentation you are working wi
 - **Context for agents.** Hand any theme to your coding agent, through a copy command or a local MCP server, so it starts from the same picture you have.
 - **Useful without AI, private by default.** No account, no telemetry, and your code stays on your machine.
 
+## Install from source
+
+Punaise is not on the Marketplace yet. To use the current build:
+
+```sh
+npm install
+npm run package
+code --install-extension packages/extension/punaise.vsix
+```
+
+Then reload VS Code. Run the same commands again to update. Pins are kept in memory only until persistence arrives in Phase 1.
+
 ## Documentation
 
 - [Vision](docs/vision.md): the problem, principles, product model and positioning

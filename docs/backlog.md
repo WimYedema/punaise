@@ -11,6 +11,10 @@ Agents working on this repository follow the rules in [AGENTS.md](../AGENTS.md).
 - **Ready:** an item is ready to build only if it has a description, acceptance criteria, an estimate and a tier. Items marked *Not ready* must be refined by a human first.
 - **Owner:** `agent` items can be built by a coding agent. `human` items need a person (decisions, validation, testing on real work).
 
+### Versions
+
+Each phase has its own minor version of the extension: Phase 0 is `0.1.x`, Phase 1 is `0.2.x`, Phase 2 is `0.3.x`, and so on. The first item of a phase that changes the extension bumps the minor version; fixes within a phase bump the patch version. `packages/core` keeps the same version as the extension.
+
 ### Estimates
 
 Estimates are size budgets an agent can check against while working, not hours.
@@ -185,7 +189,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ## Phase 1: Personal MVP (not ready)
 
-These items are placeholders with rough estimates and no tier yet. They are refined after the Phase 0 gate, using what PUN-010 finds. Agents must not start them until a human marks them ready.
+Phase 1 ships as version `0.2.x` (see [versions](#versions)). These items are placeholders with rough estimates and no tier yet. They are refined after the Phase 0 gate, using what PUN-010 finds. Agents must not start them until a human marks them ready.
 
 | ID | Item | Rough size | Notes |
 | --- | --- | --- | --- |

@@ -8,7 +8,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "package": "npm run build -w @punaise/core && npm run package -w punaise"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
