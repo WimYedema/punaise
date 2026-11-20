@@ -13,28 +13,24 @@ export class CodeHighlighter {
   private shiki?: Promise<HighlighterCore>;
   private themeName?: string;
   private readonly langs = new Map<string, string | undefined>();
-  private readonly cache = new Map<string, ThemedToken[][]>();
 
   /** Forget the loaded theme, e.g. after a theme change. */
   reset(): void {
     this.themeName = undefined;
-    this.cache.clear();
   }
 
-  /** Tokens per line for a whole document, or undefined when the language or theme is unknown. */
-  async tokenize(document: vscode.TextDocument): Promise<ThemedToken[][] | undefined> {
+  /**
+   * Tokens per line for lines `start` to `end` of a document, or undefined when the language or
+   * theme is unknown. Tokenizing starts in the grammar's initial state, so `start` should be the
+   * start of a top-level declaration. Cost grows with the range, not the file (about 0.1 ms per line).
+   */
+  async tokenize(document: vscode.TextDocument, start: number, end: number): Promise<ThemedToken[][] | undefined> {
     const shiki = await (this.shiki ??= createHighlighterCore({ themes: [], langs: [], engine: createJavaScriptRegexEngine() }));
     const theme = this.themeName ?? (this.themeName = await loadActiveTheme(shiki));
     const lang = await this.loadLanguage(shiki, document.languageId);
     if (!theme || !lang) return undefined;
-    const key = `${theme}|${document.uri.toString()}|${document.version}`;
-    let tokens = this.cache.get(key);
-    if (!tokens) {
-      tokens = shiki.codeToTokens(document.getText(), { lang, theme }).tokens;
-      if (this.cache.size > 50) this.cache.clear();
-      this.cache.set(key, tokens);
-    }
-    return tokens;
+    const text = document.getText(new vscode.Range(start, 0, end, document.lineAt(end).text.length));
+    return shiki.codeToTokens(text, { lang, theme }).tokens;
   }
 
   private async loadLanguage(shiki: HighlighterCore, languageId: string): Promise<string | undefined> {

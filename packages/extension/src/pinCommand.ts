@@ -24,9 +24,13 @@ export async function pinCurrentSymbol(store: PinStore, waitMs = DEFAULT_WAIT_MS
   const symbol = symbolAtPosition(symbols.map(toNode), editor.selection.active);
   if (!symbol) return { kind: "notInSymbol" };
 
-  const path = vscode.workspace.asRelativePath(document.uri, false).replace(/\\/g, "/");
-  const result = store.add({ path, symbol });
+  const result = store.add({ path: workspacePath(document.uri), symbol });
   return { kind: result.added ? "pinned" : "alreadyPinned", result };
+}
+
+/** The path stored in pins: relative to the workspace folder, with forward slashes. */
+export function workspacePath(uri: vscode.Uri): string {
+  return vscode.workspace.asRelativePath(uri, false).replace(/\\/g, "/");
 }
 
 type ProviderResult = (vscode.DocumentSymbol | vscode.SymbolInformation)[] | undefined;

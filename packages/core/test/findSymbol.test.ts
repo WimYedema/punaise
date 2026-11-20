@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { findSymbol, signatureLineCount, type SymbolKind, type SymbolNode } from "../src/index.js";
+import { findSymbol, findSymbolPath, signatureLineCount, type SymbolKind, type SymbolNode } from "../src/index.js";
 
 function node(name: string, kind: SymbolKind, lines: [number, number], children: SymbolNode[] = []): SymbolNode {
   return { name, kind, range: { start: { line: lines[0], character: 0 }, end: { line: lines[1], character: 1 } }, children };
@@ -34,6 +34,12 @@ describe("findSymbol", () => {
   test("prefers a matching kind over a larger range", () => {
     const both = [node("x", "variable", [0, 10]), node("x", "function", [11, 12])];
     assert.equal(findSymbol(both, { name: "x", kind: "function", container: [] })?.kind, "function");
+  });
+
+  test("findSymbolPath returns the ancestors, outermost first", () => {
+    const path = findSymbolPath(symbols, { name: "localFunction", kind: "function", container: ["SimulationService", "run"] });
+    assert.deepEqual(path?.map((n) => n.name), ["SimulationService", "run", "localFunction"]);
+    assert.deepEqual(findSymbolPath(symbols, { name: "parse", kind: "function", container: [] })?.map((n) => n.range.start.line), [17]);
   });
 
   test("returns undefined when the name or container does not match", () => {

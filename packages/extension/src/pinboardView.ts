@@ -1,15 +1,17 @@
 import * as vscode from "vscode";
 import { randomBytes } from "node:crypto";
 import { PRODUCT_NAME, type PinStore } from "@punaise/core";
-import { openPin, renderPins, type RenderedPins } from "./pinRenderer";
-import { CodeHighlighter } from "./highlighter";
+import { openPin, renderCards, type RenderContext, type RenderedPins } from "./pinRenderer";
+import { CodeHighlighter, StyleClasses } from "./highlighter";
 
 /** Renders the pinboard. The webview only displays what the host gives it. */
 export class PinboardViewProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
   private readonly expanded = new Set<string>();
   private readonly highlighter = new CodeHighlighter();
-  private renders = 0;
+  private context = this.newContext();
+  /** Renders run one at a time, so results never arrive out of order. */
+  private queue: Promise<void> = Promise.resolve();
 
   constructor(private readonly store: PinStore) {}
 
@@ -17,18 +19,33 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
     this.view = view;
     view.webview.options = { enableScripts: true, localResourceRoots: [] };
     view.webview.onDidReceiveMessage((message: unknown) => this.onMessage(message));
+    view.onDidChangeVisibility(() => {
+      if (view.visible) void this.refresh();
+    });
     view.onDidDispose(() => {
       if (this.view === view) this.view = undefined;
     });
     void this.refresh();
   }
 
-  /** Re-renders the pins, if the view has been opened. */
-  async refresh(): Promise<void> {
-    if (!this.view) return;
-    const render = ++this.renders;
-    const content = await renderPins(this.store.list(), this.expanded, this.highlighter);
-    if (render === this.renders && this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content);
+  /** Re-renders the whole view, if it has been opened. */
+  refresh(): Promise<void> {
+    return this.enqueue(async () => {
+      if (!this.view) return;
+      this.context = this.newContext();
+      const cards = await renderCards(this.store.list(), this.context);
+      const content = { html: cards.map((card) => card.html).join("\n"), css: this.context.classes.css() };
+      if (this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content);
+    });
+  }
+
+  /** Updates, in place, the cards of pins in a changed file whose code or resolution changed. */
+  fileChanged(path: string): Promise<void> {
+    return this.enqueue(async () => {
+      if (!this.view?.visible) return; // a hidden view is re-rendered in full when shown again
+      const cards = await renderCards(this.store.list().filter((pin) => pin.path === path), this.context);
+      if (cards.length > 0 && this.view) await this.view.webview.postMessage({ type: "cards", cards, css: this.context.classes.css() });
+    });
   }
 
   /** Re-renders with the new colour theme. */
@@ -47,6 +64,15 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
     await vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
   }
 
+  private newContext(): RenderContext {
+    return { highlighter: this.highlighter, classes: new StyleClasses(), expanded: this.expanded, shown: new Map() };
+  }
+
+  private enqueue(task: () => Promise<void>): Promise<void> {
+    this.queue = this.queue.then(task).catch((error: unknown) => console.error("Punaise: rendering failed", error));
+    return this.queue;
+  }
+
   /** The webview reports cards being opened or closed, so a re-render keeps them that way. */
   private onMessage(message: unknown): void {
     const m = message as { type?: unknown; id?: unknown; open?: unknown };
@@ -61,21 +87,34 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
   }
 }
 
-/** The script only reports open/closed cards and keeps the scroll position across re-renders. */
+/**
+ * The script reports open/closed cards and link clicks, keeps the scroll position across
+ * re-renders, and swaps in cards the host re-rendered. Listeners are delegated, so swapped-in
+ * cards work without rebinding.
+ */
 const SCRIPT = `
 const vscode = acquireVsCodeApi();
 window.scrollTo(0, (vscode.getState() || {}).scrollY || 0);
 addEventListener("scroll", () => vscode.setState({ scrollY: window.scrollY }));
-for (const card of document.querySelectorAll("details[data-id]")) {
-  card.addEventListener("toggle", () => vscode.postMessage({ type: "toggle", id: card.dataset.id, open: card.open }));
-}
-for (const link of document.querySelectorAll("button[data-open]")) {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    vscode.postMessage({ type: "open", id: link.dataset.open });
-  });
-}`;
+document.addEventListener("toggle", (event) => {
+  const card = event.target;
+  if (card instanceof HTMLDetailsElement && card.dataset.id) vscode.postMessage({ type: "toggle", id: card.dataset.id, open: card.open });
+}, true);
+document.addEventListener("click", (event) => {
+  const link = event.target instanceof Element && event.target.closest("button[data-open]");
+  if (!link) return;
+  event.preventDefault();
+  event.stopPropagation();
+  vscode.postMessage({ type: "open", id: link.dataset.open });
+}, true);
+addEventListener("message", (event) => {
+  if (event.data?.type !== "cards") return;
+  document.getElementById("tokens").textContent = event.data.css;
+  for (const card of event.data.cards) {
+    const element = document.querySelector('[data-id="' + CSS.escape(card.id) + '"]');
+    if (element) element.outerHTML = card.html;
+  }
+});`;
 
 /** Strict CSP: only nonce-tagged style and script, no other sources, no network. */
 export function renderPinboardHtml(nonce: string, content: RenderedPins = { html: "", css: "" }): string {
@@ -112,8 +151,8 @@ export function renderPinboardHtml(nonce: string, content: RenderedPins = { html
     details[open] .signature { display: none; }
     .body { max-height: 20em; overflow: auto; }
     .note { margin: 0; padding: 4px 6px; color: var(--vscode-errorForeground); }
-${content.css}
   </style>
+  <style nonce="${nonce}" id="tokens">${content.css}</style>
 </head>
 <body>
   <h1>${PRODUCT_NAME}</h1>

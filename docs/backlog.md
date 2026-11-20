@@ -134,13 +134,14 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-008 Keep pins live
 
-- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** M · **Depends on:** PUN-006
+- **Status:** done · **Owner:** agent · **Tier:** strong · **Estimate:** M · **Depends on:** PUN-006
 - **Description:** When a pinned file changes, re-resolve its pins (debounced, around 200 ms) and update the webview. Resolution uses the path hint first, then name, kind and container chain. A pin that cannot be resolved is shown as unresolved, not removed.
 - **Acceptance criteria:**
   - Editing a pinned function updates its card without a manual refresh.
   - Renaming a pinned function shows it as unresolved; undoing the rename resolves it again.
   - Typing in a large file does not make the editor sluggish.
 - **Out of scope:** the full set of resolution states and repair proposals (Phase 2).
+- **Note:** Only cards whose source text or resolution changed are re-highlighted and swapped in place; highlighting starts at the symbol's top-level ancestor, so cost follows the class size, not the file (Shiki takes about 0.1 ms per line). On a 5000-line file an update takes about 100 ms, mostly the language server's symbol request. Highlighting can go stale if code above the symbol inside the same top-level declaration changes how the grammar reads it (rare).
 
 ### PUN-022 Pin candidate strip
 

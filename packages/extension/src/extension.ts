@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { PinStore } from "@punaise/core";
 import { PinboardViewProvider } from "./pinboardView";
 import { pinCurrentSymbol, showOutcome } from "./pinCommand";
+import { PinnedFileWatcher } from "./pinnedFileWatcher";
 
 /** Secondary side bar view containers arrived in VS Code 1.106. */
 export function supportsSecondarySidebar(version: string): boolean {
@@ -29,6 +30,10 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       return outcome;
     }),
+    new PinnedFileWatcher(
+      (path) => store.list().some((pin) => pin.path === path),
+      (path) => void provider.fileChanged(path),
+    ),
     vscode.window.onDidChangeActiveColorTheme(() => provider.themeChanged()),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration("editor.tokenColorCustomizations")) provider.themeChanged();

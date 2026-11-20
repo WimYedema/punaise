@@ -66,14 +66,19 @@ function compare(a: Position, b: Position): number {
  * ties (decision D-6), then the largest range, so TypeScript overloads resolve to the implementation.
  */
 export function findSymbol(symbols: readonly SymbolNode[], identity: SymbolIdentity): SymbolNode | undefined {
-  let level = symbols;
+  return findSymbolPath(symbols, identity)?.at(-1);
+}
+
+/** Like `findSymbol`, but returns the symbol's ancestors too, outermost first, ending with the symbol. */
+export function findSymbolPath(symbols: readonly SymbolNode[], identity: SymbolIdentity): SymbolNode[] | undefined {
+  let level: SymbolNode[][] = symbols.map((node) => [node]);
   for (const name of identity.container) {
-    const parents = level.filter((node) => node.name === name);
-    level = parents.flatMap((node) => node.children);
+    level = level.filter((path) => path.at(-1)?.name === name).flatMap((path) => path.at(-1)?.children.map((child) => [...path, child]) ?? []);
   }
-  const candidates = level.filter((node) => node.name === identity.name);
-  const score = (node: SymbolNode) => (node.kind === identity.kind ? 1 : 0);
-  return candidates.sort((a, b) => score(b) - score(a) || span(b.range) - span(a.range))[0];
+  const candidates = level.filter((path) => path.at(-1)?.name === identity.name) as [SymbolNode, ...SymbolNode[]][];
+  const last = (path: SymbolNode[]) => path[path.length - 1] as SymbolNode;
+  const score = (path: SymbolNode[]) => (last(path).kind === identity.kind ? 1 : 0);
+  return candidates.sort((a, b) => score(b) - score(a) || span(last(b).range) - span(last(a).range))[0];
 }
 
 function span(range: SymbolNode["range"]): number {
