@@ -198,3 +198,4 @@ These items are placeholders with rough estimates and no tier yet. They are refi
 | PUN-018 | Lead status on pins (open, ruled out, confirmed) | S | Depends on D-1 |
 | PUN-019 | Selection pins and documentation view | M | |
 | PUN-020 | Recruit two or three external testers | human | Start during Phase 0; recruiting takes longer than building |
+| PUN-024 | Pins in the editor: a pin icon in the gutter next to pinned symbols, plus a way to pin from the code itself | S–M | Extensions cannot handle gutter clicks, so options are the line-number context menu, a CodeLens (noisy; maybe only at the cursor) or a hover action |
