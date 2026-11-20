@@ -190,13 +190,14 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-027 Alpha pre-release on the Marketplace
 
-- **Status:** doing · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-026
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-026
 - **Description:** Publish the extension under the `ienfald` publisher as a Marketplace pre-release marked Preview, so it can be installed on other machines. A version tag such as `v0.1.0` on `main` triggers a workflow that tests, checks the tag against the manifest version and publishes with `vsce publish --pre-release`, authenticating through GitHub OIDC trusted publishing (no stored token). The Marketplace page says plainly that this is an alpha.
 - **Acceptance criteria:**
   - The manifest uses publisher `ienfald`, is marked preview and links to the repository; tests use the new extension ID.
   - Pushing a matching version tag publishes a pre-release; a tag that does not match the manifest version fails before publishing.
 - **Out of scope:** Open VSX (Phase 4), stable releases, changelogs, an icon.
 - **Needs the human:** configure trusted publishing for this repository and workflow on the publisher page, then push the first tag.
+- **Note:** 0.1.0 was published on 2026-11-20 from tag `v0.1.0` through OIDC trusted publishing.
 
 ### PUN-023 Pin symbols near the cursor
 

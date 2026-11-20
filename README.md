@@ -20,9 +20,19 @@ Punaise lets you pin the functions, classes and documentation you are working wi
 - **Context for agents.** Hand any theme to your coding agent, through a copy command or a local MCP server, so it starts from the same picture you have.
 - **Useful without AI, private by default.** No account, no telemetry, and your code stays on your machine.
 
-## Install from source
+## Install
 
-Punaise is not on the Marketplace yet. To use the current build:
+Punaise is available as an **alpha pre-release** on the Marketplace: search for "Punaise" in the Extensions view and install the pre-release, or run:
+
+```sh
+code --install-extension ienfald.punaise --pre-release
+```
+
+To publish a new version, bump `version` in `packages/extension/package.json` and push a matching tag (`v0.1.1`); the release workflow tests and publishes it.
+
+### From source
+
+To use the current build from this repository:
 
 ```sh
 npm install
