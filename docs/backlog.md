@@ -8,7 +8,7 @@ Agents working on this repository follow the rules in [AGENTS.md](../AGENTS.md).
 
 - **Order is priority.** Work top to bottom within a phase. Do not start an item whose dependencies are not `done`.
 - **Status:** `todo`, `doing`, `blocked`, `done`. Only one item is `doing` at a time.
-- **Ready:** an item is ready to build only if it has a description, acceptance criteria and an estimate. Items marked *Not ready* must be refined by a human first.
+- **Ready:** an item is ready to build only if it has a description, acceptance criteria, an estimate and a tier. Items marked *Not ready* must be refined by a human first.
 - **Owner:** `agent` items can be built by a coding agent. `human` items need a person (decisions, validation, testing on real work).
 
 ### Estimates
@@ -25,6 +25,17 @@ Estimates are size budgets an agent can check against while working, not hours.
 **Spikes** are timeboxed experiments. Their deliverable is a short written finding in `docs/spikes/`, not production code. Spike code may be thrown away.
 
 **Escalate at 1.5×:** if an item is about to exceed 1.5 times its line or file budget, stop and escalate (see [AGENTS.md](../AGENTS.md#escalation)).
+
+### Model tiers
+
+Each agent item has a **Tier** saying how capable a model it needs. Tiers name capabilities, not models; [AGENTS.md](../AGENTS.md#model-tiers) maps them to current models, so switching models is a one-line change there.
+
+| Tier | Use for |
+| --- | --- |
+| **standard** | Well-specified items with clear acceptance criteria and tests to check them |
+| **strong** | Items that set conventions or shape the schema, spikes, subtle logic (performance, edge cases), and re-runs of items a standard agent could not finish |
+
+When choosing a tier: if a mistake would be cheap to spot and fix, use `standard`; if it would spread into later items, use `strong`.
 
 ## Decisions needed
 
@@ -44,7 +55,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-001 Scaffold the extension
 
-- **Status:** todo · **Owner:** agent · **Estimate:** S · **Depends on:** —
+- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S · **Depends on:** —
 - **Description:** Create a TypeScript VS Code extension with a strict `tsconfig`, a bundler (esbuild), linting, and a test runner (`@vscode/test-cli` for integration tests, a plain unit-test runner for core code). Use npm workspaces with two packages: `packages/core` (no `vscode` imports) and `packages/extension`. Contribute a view container to the **secondary side bar**, with a `when`-clause fallback to the activity bar for editors without secondary side bar support. The container holds one `WebviewView` that shows "Punaise" and an empty-state message.
 - **Acceptance criteria:**
   - `npm install`, `npm run build`, `npm test` and `npm run lint` all succeed from a clean clone.
@@ -55,7 +66,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-002 Spike: theme-matched highlighting in a webview
 
-- **Status:** todo · **Owner:** agent · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
+- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
 - **Description:** Find out whether code in the webview can be highlighted so that it looks like the editor. Try Shiki in the webview, mapping the active VS Code colour theme to a Shiki theme. Check light, dark and high-contrast themes, and how the result reacts to a theme change.
 - **Acceptance criteria:**
   - `docs/spikes/highlighting.md` records: the approach, what worked, what did not, bundle-size impact, and a recommendation.
@@ -64,7 +75,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-003 Spike: symbol container chains from language servers
 
-- **Status:** todo · **Owner:** agent · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
+- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
 - **Description:** Check whether `vscode.executeDocumentSymbolProvider` returns enough structure to build the symbol identity in [design.md](design.md#example-theme): name, kind and the chain of enclosing symbols. Test with the TypeScript language service and with Pylance on small sample files containing classes, nested functions, overloads (TypeScript) and decorated functions (Python).
 - **Acceptance criteria:**
   - `docs/spikes/symbol-identity.md` records what each language server returns, gaps found, and whether the identity model needs to change.
@@ -73,7 +84,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-004 Core pin model
 
-- **Status:** todo · **Owner:** agent · **Estimate:** S · **Depends on:** PUN-001, PUN-003
+- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S · **Depends on:** PUN-001, PUN-003
 - **Description:** In `packages/core`, define the pin types for symbol pins (path hint, name, kind, container chain, optional fingerprint) and an in-memory pin store (add, remove, list, ordered). Follow the field names in [design.md](design.md#example-theme).
 - **Acceptance criteria:**
   - Types and store are covered by unit tests, including ordering and duplicate pins.
@@ -82,7 +93,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-005 Command: Pin Current Symbol
 
-- **Status:** todo · **Owner:** agent · **Estimate:** M · **Depends on:** PUN-004
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-004
 - **Description:** Register `Punaise: Pin Current Symbol` with a default keybinding. It finds the smallest document symbol containing the cursor, builds a pin from it, adds it to the store, and reveals the Punaise view. Pinning the same symbol twice does not create a duplicate.
 - **Acceptance criteria:**
   - Works in TypeScript and Python files with their language servers installed.
@@ -93,7 +104,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-006 Render pins: header, signature and code views
 
-- **Status:** todo · **Owner:** agent · **Estimate:** M · **Depends on:** PUN-002, PUN-005
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-002, PUN-005
 - **Description:** Render each pin in the webview as a collapsible card. The header shows name, kind and relative path. Collapsed, a card shows the signature; expanded, it shows the full code, highlighted using the approach recommended in PUN-002. The extension host sends rendered data to the webview; the webview never reads files.
 - **Acceptance criteria:**
   - Five or more pins stay readable in a narrow side bar.
@@ -103,14 +114,14 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-007 Navigate from pin to source
 
-- **Status:** todo · **Owner:** agent · **Estimate:** XS · **Depends on:** PUN-006
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006
 - **Description:** Clicking a pin's header opens the file in the editor and reveals the symbol's range.
 - **Acceptance criteria:** Clicking a header opens the right file at the right symbol, in the active editor group.
 - **Out of scope:** opening in a split, peek views.
 
 ### PUN-008 Keep pins live
 
-- **Status:** todo · **Owner:** agent · **Estimate:** M · **Depends on:** PUN-006
+- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** M · **Depends on:** PUN-006
 - **Description:** When a pinned file changes, re-resolve its pins (debounced, around 200 ms) and update the webview. Resolution uses the path hint first, then name, kind and container chain. A pin that cannot be resolved is shown as unresolved, not removed.
 - **Acceptance criteria:**
   - Editing a pinned function updates its card without a manual refresh.
@@ -120,14 +131,14 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-009 Remove pins and empty state
 
-- **Status:** todo · **Owner:** agent · **Estimate:** XS · **Depends on:** PUN-006
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006
 - **Description:** Each card has a remove action. When there are no pins, the panel shows a single call to action: put the cursor in a function and press the pin shortcut (showing the actual keybinding).
 - **Acceptance criteria:** Removing the last pin shows the empty state; the empty state shows the real keybinding.
 - **Out of scope:** undo for removal.
 
 ### PUN-010 Phase 0 validation
 
-- **Status:** todo · **Owner:** human · **Estimate:** 3 sessions of real work · **Depends on:** PUN-001 to PUN-009
+- **Status:** todo · **Owner:** human · **Tier:** — · **Estimate:** 3 sessions of real work · **Depends on:** PUN-001 to PUN-009
 - **Description:** Use the prototype on two real repositories (one TypeScript, one Python, 50k–500k lines) during real investigations. Record findings in `docs/validation/phase-0.md`, answering:
   1. Do pinned symbols stay useful after the initial investigation?
   2. Is the side bar better than split editors and open tabs?
@@ -138,7 +149,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ## Phase 1: Personal MVP (not ready)
 
-These items are placeholders with rough estimates. They are refined after the Phase 0 gate, using what PUN-010 finds. Agents must not start them until a human marks them ready.
+These items are placeholders with rough estimates and no tier yet. They are refined after the Phase 0 gate, using what PUN-010 finds. Agents must not start them until a human marks them ready.
 
 | ID | Item | Rough size | Notes |
 | --- | --- | --- | --- |

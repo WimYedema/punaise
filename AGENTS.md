@@ -11,6 +11,23 @@ All work comes from [docs/backlog.md](docs/backlog.md).
 3. Set its status to `doing` when you start and `done` when every acceptance criterion is met.
 4. Do not start items marked *Not ready* or owned by `human`.
 
+## Model tiers
+
+Backlog items carry a **Tier** (see [model tiers](docs/backlog.md#model-tiers)). Current mapping:
+
+| Tier | Model |
+| --- | --- |
+| standard | Claude Sonnet 5.5 |
+| strong | Claude Opus 5.5 |
+
+Before starting an item, compare its tier with the model you are running as:
+
+- **Your tier is lower than the item's** (a standard model on a `strong` item): do not start. Escalate and ask for the item to be run with a stronger model.
+- **Your tier matches or is higher:** go ahead.
+- **You are a standard model and you escalate for any other reason** (estimate, repeated failure, ambiguity): include in your recommendation whether the item should be re-run at `strong`.
+
+If you cannot tell which model you are, say so and ask before starting a `strong` item.
+
 ## Stay inside the item
 
 - Build what the description says, and nothing else. Do not add features, options, refactors or "while I'm here" improvements.
@@ -37,6 +54,7 @@ Stop and escalate to the human instead of deciding yourself when:
 - The work would add network access, telemetry, or send source code anywhere.
 - Tests or tooling fail for reasons unrelated to the item.
 - You have tried the same approach twice without success.
+- You are running below the item's model tier.
 
 An escalation is a short message containing:
 
