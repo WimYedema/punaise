@@ -137,16 +137,28 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - Typing in a large file does not make the editor sluggish.
 - **Out of scope:** the full set of resolution states and repair proposals (Phase 2).
 
+### PUN-022 Pin candidate strip
+
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-005, PUN-006
+- **Description:** A single line at the top of the panel shows the symbol under the cursor and its enclosing symbols as chips, for example `SimulationService › run`. Clicking a chip pins that symbol, so pinning needs neither the shortcut nor a context menu. The strip updates about 200 ms after the cursor stops, reusing the symbol lookup from PUN-005 and skipping parameters and locals as described in the [symbol identity spike](spikes/symbol-identity.md#does-the-identity-model-need-to-change). Chips for symbols that are already pinned show as pinned. Chips can be command links, so the webview stays script-free; only the pin command may be enabled as a command URI.
+- **Acceptance criteria:**
+  - Moving the cursor into a method shows the method and its class as chips; clicking either pins it.
+  - An already pinned symbol shows as pinned and does not create a duplicate when clicked.
+  - With the cursor outside any symbol, or in a file without a symbol provider, the strip shows a short hint instead of chips.
+  - The strip never reorders or changes existing pin cards, and typing in a large file stays responsive.
+  - Integration test covers pinning from the strip in a TypeScript fixture.
+- **Out of scope:** symbols near the cursor (PUN-023), callers, callees or references, keyboard navigation of chips.
+
 ### PUN-009 Remove pins and empty state
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006
-- **Description:** Each card has a remove action. When there are no pins, the panel shows a single call to action: put the cursor in a function and press the pin shortcut (showing the actual keybinding).
+- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** XS · **Depends on:** PUN-006, PUN-022
+- **Description:** Each card has a remove action. When there are no pins, the panel shows the candidate strip (PUN-022) and a single call to action: put the cursor in a function and click it in the strip, or press the pin shortcut (showing the actual keybinding).
 - **Acceptance criteria:** Removing the last pin shows the empty state; the empty state shows the real keybinding.
 - **Out of scope:** undo for removal.
 
 ### PUN-010 Phase 0 validation
 
-- **Status:** todo · **Owner:** human · **Tier:** — · **Estimate:** 3 sessions of real work · **Depends on:** PUN-001 to PUN-009
+- **Status:** todo · **Owner:** human · **Tier:** — · **Estimate:** 3 sessions of real work · **Depends on:** PUN-001 to PUN-009, PUN-022
 - **Description:** Use the prototype on two real repositories (one TypeScript, one Python, 50k–500k lines) during real investigations. Record findings in `docs/validation/phase-0.md`, answering:
   1. Do pinned symbols stay useful after the initial investigation?
   2. Is the side bar better than split editors and open tabs?
@@ -154,6 +166,10 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   4. What friction came up, and what was missing?
   5. Would pasting this set of pins into an agent have helped on the task?
 - **Acceptance criteria:** A written go/no-go decision for Phase 1, and an updated Phase 1 section in this backlog.
+
+### PUN-023 Pin symbols near the cursor
+
+- *Not ready.* Offer symbols that are textually close to the cursor as one-click pins, next to the candidate strip (PUN-022). Close means position in the file, not the call graph (that is D-4 and Phase 3). To decide: what counts as close (previous and next siblings, symbols visible in the editor, within N lines), how many to show, and whether it is a separate row or part of the strip.
 
 ### PUN-021 Clean build output before compiling tests
 
