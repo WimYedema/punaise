@@ -112,14 +112,15 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-006 Render pins: header, signature and code views
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-002, PUN-005
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-002, PUN-005
 - **Description:** Render each pin in the webview as a collapsible card. The header shows name, kind and relative path. Collapsed, a card shows the signature; expanded, it shows the full code, highlighted using the approach recommended in PUN-002. The extension host sends rendered data to the webview; the webview never reads files.
 - **Acceptance criteria:**
   - Five or more pins stay readable in a narrow side bar.
   - Highlighting follows the active colour theme, including after a theme change.
   - Long bodies scroll inside the card rather than stretching the panel.
 - **Out of scope:** documentation view, reordering, persistence.
-- **Note:** Approved: set `module` and `moduleResolution` to `Node20` in the extension's tsconfig (see [highlighting spike](spikes/highlighting.md#recommendation-for-pun-006)). Adding `shiki` as a runtime dependency still needs approval.
+- **Note:** Cards use `<details>`; a small nonce-tagged script reports open/closed cards to the host and keeps the scroll position, because re-rendering would otherwise collapse cards. The webview still has no file access. Signatures come from a line heuristic in core (`signatureLineCount`); symbols are found with core `findSymbol` (name and container, kind and then largest range break ties). Narrow-panel readability checked with screenshots at 280 px.
+- **Note:** Approved: set `module` to `Node20` in the extension's tsconfig (`moduleResolution` stays `Node16`) (see [highlighting spike](spikes/highlighting.md#recommendation-for-pun-006)). Adding `shiki` as a runtime dependency still needs approval.
 
 ### PUN-007 Navigate from pin to source
 

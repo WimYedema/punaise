@@ -60,3 +60,22 @@ function isSmaller(a: SymbolNode["range"], b: SymbolNode["range"]): boolean {
 function compare(a: Position, b: Position): number {
   return a.line - b.line || a.character - b.character;
 }
+
+/**
+ * Finds a pinned symbol in a document's symbols. Name and container chain must match; kind breaks
+ * ties (decision D-6), then the largest range, so TypeScript overloads resolve to the implementation.
+ */
+export function findSymbol(symbols: readonly SymbolNode[], identity: SymbolIdentity): SymbolNode | undefined {
+  let level = symbols;
+  for (const name of identity.container) {
+    const parents = level.filter((node) => node.name === name);
+    level = parents.flatMap((node) => node.children);
+  }
+  const candidates = level.filter((node) => node.name === identity.name);
+  const score = (node: SymbolNode) => (node.kind === identity.kind ? 1 : 0);
+  return candidates.sort((a, b) => score(b) - score(a) || span(b.range) - span(a.range))[0];
+}
+
+function span(range: SymbolNode["range"]): number {
+  return (range.end.line - range.start.line) * 100_000 + (range.end.character - range.start.character);
+}

@@ -21,10 +21,11 @@ suite("Punaise extension", () => {
     assert.equal(supportsSecondarySidebar("2.0.0"), true);
   });
 
-  test("webview HTML has a strict CSP and no scripts", () => {
+  test("webview HTML has a strict CSP and only nonce-tagged inline script", () => {
     const html = renderPinboardHtml("abc");
-    assert.match(html, /default-src 'none'; style-src 'nonce-abc';/);
-    assert.doesNotMatch(html, /<script/i);
+    assert.match(html, /default-src 'none'; style-src 'nonce-abc'; script-src 'nonce-abc';/);
+    assert.deepEqual(html.match(/<script[^>]*>/gi), ['<script nonce="abc">']);
+    assert.doesNotMatch(html, /https?:|src=/i);
     assert.match(html, /Punaise/);
   });
 });

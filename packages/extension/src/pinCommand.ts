@@ -35,7 +35,7 @@ type ProviderResult = (vscode.DocumentSymbol | vscode.SymbolInformation)[] | und
  * The provider returns undefined both while a language server is starting and when there is
  * none, so retry for a while before giving up (see docs/spikes/symbol-identity.md).
  */
-async function fetchSymbols(uri: vscode.Uri, waitMs: number): Promise<ProviderResult> {
+export async function fetchSymbols(uri: vscode.Uri, waitMs: number): Promise<ProviderResult> {
   const query = () => vscode.commands.executeCommand<ProviderResult>("vscode.executeDocumentSymbolProvider", uri);
   const first = await query();
   if (first !== undefined || waitMs <= 0) return first;
@@ -57,7 +57,7 @@ function isHierarchical(symbols: (vscode.DocumentSymbol | vscode.SymbolInformati
   return symbols.every((symbol) => "children" in symbol);
 }
 
-function toNode(symbol: vscode.DocumentSymbol): SymbolNode {
+export function toNode(symbol: vscode.DocumentSymbol): SymbolNode {
   return { name: symbol.name, kind: toKind(symbol.kind), range: symbol.range, children: symbol.children.map(toNode) };
 }
 

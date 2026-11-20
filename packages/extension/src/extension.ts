@@ -24,10 +24,14 @@ export function activate(context: vscode.ExtensionContext): void {
       const outcome = await pinCurrentSymbol(store);
       showOutcome(outcome);
       if (outcome.kind === "pinned" || outcome.kind === "alreadyPinned") {
-        provider.refresh();
+        await provider.refresh();
         await provider.reveal(secondary ? "punaise.pinboard" : "punaise.pinboardFallback");
       }
       return outcome;
+    }),
+    vscode.window.onDidChangeActiveColorTheme(() => provider.themeChanged()),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("editor.tokenColorCustomizations")) provider.themeChanged();
     }),
   );
 }
