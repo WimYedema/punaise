@@ -4,7 +4,17 @@
   "description": "Keep the code you are reasoning about in view.",
   "version": "0.1.0",
   "private": true,
-  "publisher": "punaise",
+  "publisher": "ienfald",
+  "preview": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WimYedema/punaise.git",
+    "directory": "packages/extension"
+  },
+  "homepage": "https://github.com/WimYedema/punaise#readme",
+  "bugs": {
+    "url": "https://github.com/WimYedema/punaise/issues"
+  },
   "license": "MIT",
   "engines": {
     "vscode": "^1.90.0"
@@ -72,7 +82,7 @@
   "scripts": {
     "build": "tsc -p . && node esbuild.mjs",
     "test": "npm run build && vscode-test",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --out punaise.vsix"
+    "package": "npm run build && vsce package --no-dependencies --out punaise.vsix"
   },
   "dependencies": {
     "@punaise/core": "*",

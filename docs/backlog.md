@@ -188,6 +188,16 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - The run's artifacts include `punaise.vsix`.
 - **Out of scope:** publishing to the Marketplace or Open VSX (Phase 4), release automation, test caching.
 
+### PUN-027 Alpha pre-release on the Marketplace
+
+- **Status:** doing · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-026
+- **Description:** Publish the extension under the `ienfald` publisher as a Marketplace pre-release marked Preview, so it can be installed on other machines. A version tag such as `v0.1.0` on `main` triggers a workflow that tests, checks the tag against the manifest version and publishes with `vsce publish --pre-release`, authenticating through GitHub OIDC trusted publishing (no stored token). The Marketplace page says plainly that this is an alpha.
+- **Acceptance criteria:**
+  - The manifest uses publisher `ienfald`, is marked preview and links to the repository; tests use the new extension ID.
+  - Pushing a matching version tag publishes a pre-release; a tag that does not match the manifest version fails before publishing.
+- **Out of scope:** Open VSX (Phase 4), stable releases, changelogs, an icon.
+- **Needs the human:** configure trusted publishing for this repository and workflow on the publisher page, then push the first tag.
+
 ### PUN-023 Pin symbols near the cursor
 
 - *Not ready.* Offer symbols that are textually close to the cursor as one-click pins, next to the candidate strip (PUN-022). Close means position in the file, not the call graph (that is D-4 and Phase 3). To decide: what counts as close (previous and next siblings, symbols visible in the editor, within N lines), how many to show, and whether it is a separate row or part of the strip.

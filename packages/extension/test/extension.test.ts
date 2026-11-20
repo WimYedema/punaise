@@ -5,7 +5,7 @@ import { renderPinboardHtml } from "../src/pinboardView";
 
 suite("Punaise extension", () => {
   test("activates", async () => {
-    const extension = vscode.extensions.getExtension("punaise.punaise");
+    const extension = vscode.extensions.getExtension("ienfald.punaise");
     assert.ok(extension, "extension is installed");
     await extension.activate();
     assert.equal(extension.isActive, true);
@@ -22,7 +22,7 @@ suite("Punaise extension", () => {
   });
 
   test("the empty state shows the default keybinding for the platform", () => {
-    const manifest = vscode.extensions.getExtension("punaise.punaise")?.packageJSON;
+    const manifest = vscode.extensions.getExtension("ienfald.punaise")?.packageJSON;
     assert.equal(defaultKeybinding(manifest, "win32"), "Alt+P");
     assert.equal(defaultKeybinding(manifest, "darwin"), "Cmd+Alt+P");
     const empty = renderPinboardHtml("n", undefined, "", "Alt+P");
