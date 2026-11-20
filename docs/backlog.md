@@ -179,6 +179,15 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   5. Would pasting this set of pins into an agent have helped on the task?
 - **Acceptance criteria:** A written go/no-go decision for Phase 1, and an updated Phase 1 section in this backlog.
 
+### PUN-026 CI on GitHub Actions
+
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-001
+- **Description:** On every push to `main` and every pull request, run `npm ci`, build, lint, and the unit and integration tests on Linux (integration tests under `xvfb`) and Windows. Keep the packaged `punaise.vsix` from the Linux run as a downloadable artifact.
+- **Acceptance criteria:**
+  - A push to `main` runs the workflow and it passes on both operating systems.
+  - The run's artifacts include `punaise.vsix`.
+- **Out of scope:** publishing to the Marketplace or Open VSX (Phase 4), release automation, test caching.
+
 ### PUN-023 Pin symbols near the cursor
 
 - *Not ready.* Offer symbols that are textually close to the cursor as one-click pins, next to the candidate strip (PUN-022). Close means position in the file, not the call graph (that is D-4 and Phase 3). To decide: what counts as close (previous and next siblings, symbols visible in the editor, within N lines), how many to show, and whether it is a separate row or part of the strip.
