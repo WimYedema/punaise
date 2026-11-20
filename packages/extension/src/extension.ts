@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { PinStore } from "@punaise/core";
 import { PinboardViewProvider } from "./pinboardView";
-import { pinCurrentSymbol, showOutcome } from "./pinCommand";
+import { pinCurrentSymbol, showOutcome, type PinOutcome } from "./pinCommand";
+import { CandidateStrip } from "./candidateStrip";
 import { PinnedFileWatcher } from "./pinnedFileWatcher";
 
 /** Secondary side bar view containers arrived in VS Code 1.106. */
@@ -16,18 +17,26 @@ export function activate(context: vscode.ExtensionContext): void {
     void vscode.commands.executeCommand("setContext", "punaise.noSecondarySidebar", true);
   }
   const store = new PinStore();
-  const provider = new PinboardViewProvider(store);
+  const provider = new PinboardViewProvider(store, (index) => {
+    const result = strip.pin(index);
+    if (result) void afterPin({ kind: result.added ? "pinned" : "alreadyPinned", result });
+  });
+  const strip = new CandidateStrip(store, (html) => provider.setStrip(html));
+  const afterPin = async (outcome: PinOutcome) => {
+    showOutcome(outcome);
+    if (outcome.kind !== "pinned" && outcome.kind !== "alreadyPinned") return;
+    provider.setStrip(strip.html());
+    await provider.refresh();
+    await provider.reveal(secondary ? "punaise.pinboard" : "punaise.pinboardFallback");
+  };
   for (const viewId of ["punaise.pinboard", "punaise.pinboardFallback"]) {
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(viewId, provider));
   }
   context.subscriptions.push(
+    strip,
     vscode.commands.registerCommand("punaise.pinCurrentSymbol", async () => {
       const outcome = await pinCurrentSymbol(store);
-      showOutcome(outcome);
-      if (outcome.kind === "pinned" || outcome.kind === "alreadyPinned") {
-        await provider.refresh();
-        await provider.reveal(secondary ? "punaise.pinboard" : "punaise.pinboardFallback");
-      }
+      await afterPin(outcome);
       return outcome;
     }),
     new PinnedFileWatcher(

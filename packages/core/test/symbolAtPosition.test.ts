@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { symbolAtPosition, type SymbolKind, type SymbolNode } from "../src/index.js";
+import { symbolAtPosition, symbolChainAtPosition, type SymbolKind, type SymbolNode } from "../src/index.js";
 
 function node(name: string, kind: SymbolKind, from: [number, number], to: [number, number], children: SymbolNode[] = []): SymbolNode {
   return { name, kind, range: { start: { line: from[0], character: from[1] }, end: { line: to[0], character: to[1] } }, children };
@@ -61,6 +61,16 @@ describe("symbolAtPosition", () => {
 
   test("an overload signature has the same identity as its implementation", () => {
     assert.deepEqual(symbolAtPosition(typescript, at(46)), symbolAtPosition(typescript, at(53)));
+  });
+
+  test("symbolChainAtPosition lists every pinnable enclosing symbol, outermost first", () => {
+    assert.deepEqual(symbolChainAtPosition(typescript, at(51)).map((s) => [s.name, s.container]), [
+      ["SimulationService", []],
+      ["run", ["SimulationService"]],
+      ["localFunction", ["SimulationService", "run"]],
+    ]);
+    assert.deepEqual(symbolChainAtPosition(python, at(54, 20)).map((s) => s.name), ["Simulation", "run"], "parameter skipped");
+    assert.deepEqual(symbolChainAtPosition(typescript, at(20)), []);
   });
 
   test("returns undefined outside any symbol", () => {

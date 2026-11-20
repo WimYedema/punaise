@@ -22,7 +22,12 @@ const VALUE_KINDS: readonly SymbolKind[] = ["variable", "constant"];
  * See docs/spikes/symbol-identity.md.
  */
 export function symbolAtPosition(symbols: readonly SymbolNode[], position: Position): SymbolIdentity | undefined {
-  let found: SymbolIdentity | undefined;
+  return symbolChainAtPosition(symbols, position).at(-1);
+}
+
+/** Every pinnable symbol containing a position, outermost first: e.g. a class, then its method. */
+export function symbolChainAtPosition(symbols: readonly SymbolNode[], position: Position): SymbolIdentity[] {
+  const found: SymbolIdentity[] = [];
   const chain: SymbolNode[] = [];
   let level = symbols;
   for (;;) {
@@ -30,7 +35,7 @@ export function symbolAtPosition(symbols: readonly SymbolNode[], position: Posit
     if (!node) return found;
     const parent = chain[chain.length - 1];
     if (isPinnable(node, parent)) {
-      found = { name: node.name, kind: node.kind, container: chain.map((n) => n.name) };
+      found.push({ name: node.name, kind: node.kind, container: chain.map((n) => n.name) });
     }
     chain.push(node);
     level = node.children;

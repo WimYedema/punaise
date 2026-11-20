@@ -12,8 +12,18 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
   private context = this.newContext();
   /** Renders run one at a time, so results never arrive out of order. */
   private queue: Promise<void> = Promise.resolve();
+  private strip = "";
 
-  constructor(private readonly store: PinStore) {}
+  constructor(
+    private readonly store: PinStore,
+    private readonly onPinCandidate: (index: number) => void = () => undefined,
+  ) {}
+
+  /** Replaces the candidate strip (PUN-022) without touching the cards. */
+  setStrip(html: string): void {
+    this.strip = html;
+    if (this.view?.visible) void this.view.webview.postMessage({ type: "strip", html });
+  }
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
@@ -35,7 +45,7 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
       this.context = this.newContext();
       const cards = await renderCards(this.store.list(), this.context);
       const content = { html: cards.map((card) => card.html).join("\n"), css: this.context.classes.css() };
-      if (this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content);
+      if (this.view) this.view.webview.html = renderPinboardHtml(randomBytes(16).toString("base64"), content, this.strip);
     });
   }
 
@@ -75,7 +85,8 @@ export class PinboardViewProvider implements vscode.WebviewViewProvider {
 
   /** The webview reports cards being opened or closed, so a re-render keeps them that way. */
   private onMessage(message: unknown): void {
-    const m = message as { type?: unknown; id?: unknown; open?: unknown };
+    const m = message as { type?: unknown; id?: unknown; open?: unknown; index?: unknown };
+    if (m?.type === "pinCandidate" && typeof m.index === "number") return this.onPinCandidate(m.index);
     if (typeof m?.id !== "string") return;
     if (m.type === "toggle") {
       if (m.open === true) this.expanded.add(m.id);
@@ -101,6 +112,8 @@ document.addEventListener("toggle", (event) => {
   if (card instanceof HTMLDetailsElement && card.dataset.id) vscode.postMessage({ type: "toggle", id: card.dataset.id, open: card.open });
 }, true);
 document.addEventListener("click", (event) => {
+  const chip = event.target instanceof Element && event.target.closest("button[data-candidate]");
+  if (chip) vscode.postMessage({ type: "pinCandidate", index: Number(chip.dataset.candidate) });
   const link = event.target instanceof Element && event.target.closest("button[data-open]");
   if (!link) return;
   event.preventDefault();
@@ -108,6 +121,7 @@ document.addEventListener("click", (event) => {
   vscode.postMessage({ type: "open", id: link.dataset.open });
 }, true);
 addEventListener("message", (event) => {
+  if (event.data?.type === "strip") document.getElementById("strip").innerHTML = event.data.html;
   if (event.data?.type !== "cards") return;
   document.getElementById("tokens").textContent = event.data.css;
   for (const card of event.data.cards) {
@@ -117,7 +131,7 @@ addEventListener("message", (event) => {
 });`;
 
 /** Strict CSP: only nonce-tagged style and script, no other sources, no network. */
-export function renderPinboardHtml(nonce: string, content: RenderedPins = { html: "", css: "" }): string {
+export function renderPinboardHtml(nonce: string, content: RenderedPins = { html: "", css: "" }, strip = ""): string {
   const csp = `default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';`;
   const body = content.html || "<p>No pins yet.</p>";
   return `<!DOCTYPE html>
@@ -151,11 +165,20 @@ export function renderPinboardHtml(nonce: string, content: RenderedPins = { html
     details[open] .signature { display: none; }
     .body { max-height: 20em; overflow: auto; }
     .note { margin: 0; padding: 4px 6px; color: var(--vscode-errorForeground); }
+    .strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 1.6em; margin: 0 0 8px; }
+    .strip .hint { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
+    .chip { padding: 1px 8px; border: 1px solid transparent; border-radius: 10px; font: inherit; font-size: 0.9em; cursor: pointer;
+      background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); overflow-wrap: anywhere; }
+    .chip:hover { background: var(--vscode-button-secondaryHoverBackground); }
+    .chip:focus-visible { outline: 1px solid var(--vscode-focusBorder); }
+    .chip.pinned { background: none; border-color: var(--vscode-widget-border, var(--vscode-panel-border)); color: var(--vscode-descriptionForeground); }
+    .chip.pinned::before { content: "✓ "; }
   </style>
   <style nonce="${nonce}" id="tokens">${content.css}</style>
 </head>
 <body>
   <h1>${PRODUCT_NAME}</h1>
+  <div id="strip" class="strip">${strip}</div>
   ${body}
   <script nonce="${nonce}">${SCRIPT}</script>
 </body>

@@ -145,7 +145,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-022 Pin candidate strip
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-005, PUN-006
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** S · **Depends on:** PUN-005, PUN-006
 - **Description:** A single line at the top of the panel shows the symbol under the cursor and its enclosing symbols as chips, for example `SimulationService › run`. Clicking a chip pins that symbol, so pinning needs neither the shortcut nor a context menu. The strip updates about 200 ms after the cursor stops, reusing the symbol lookup from PUN-005 and skipping parameters and locals as described in the [symbol identity spike](spikes/symbol-identity.md#does-the-identity-model-need-to-change). Chips for symbols that are already pinned show as pinned. Chips can be command links, so the webview stays script-free; only the pin command may be enabled as a command URI.
 - **Acceptance criteria:**
   - Moving the cursor into a method shows the method and its class as chips; clicking either pins it.
@@ -154,6 +154,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - The strip never reorders or changes existing pin cards, and typing in a large file stays responsive.
   - Integration test covers pinning from the strip in a TypeScript fixture.
 - **Out of scope:** symbols near the cursor (PUN-023), callers, callees or references, keyboard navigation of chips.
+- **Note:** Chips post a message to the host (like the open link) rather than using command URIs, since the webview already has a nonce-tagged script. The strip never waits for a language server; while one is starting it shows a hint and fills in on the next cursor move.
 
 ### PUN-009 Remove pins and empty state
 
