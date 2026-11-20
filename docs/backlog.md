@@ -90,12 +90,13 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-004 Core pin model
 
-- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S · **Depends on:** PUN-001, PUN-003
+- **Status:** done · **Owner:** agent · **Tier:** strong · **Estimate:** S · **Depends on:** PUN-001, PUN-003
 - **Description:** In `packages/core`, define the pin types for symbol pins (path hint, name, kind, container chain, optional fingerprint) and an in-memory pin store (add, remove, list, ordered). Follow the field names in [design.md](design.md#example-theme).
 - **Acceptance criteria:**
   - Types and store are covered by unit tests, including ordering and duplicate pins.
   - No `vscode` imports in `packages/core`.
 - **Out of scope:** persistence, themes, resolution against live documents.
+- **Note:** `kind` uses lowerCamelCase LSP symbol kind names. A duplicate is the same path, name, container and kind (D-6). Ids are generated as kebab-case container and name, with `-2` on collision.
 
 ### PUN-005 Command: Pin Current Symbol
 
