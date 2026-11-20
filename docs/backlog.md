@@ -50,6 +50,7 @@ These came out of the [user journeys](journeys.md) and must be settled by a huma
 | D-3 | Should `validate` warn by default and fail only for themes marked as maintained? | Phase 2 CLI | open |
 | D-4 | Add a simple "Pin with neighbours" action in Phase 1 or 2, before full Phase 3 suggestions? | Phase 1–2 scope | open |
 | D-5 | Guardrail: a note is a short line attached to a pin, and nothing requires one. Adopt as a product principle? | All note features | open |
+| D-6 | Must a symbol's `kind` match for a pin to count as resolved, or only name and container chain, with kind as a tie-breaker? Kinds vary by language server and change on refactors such as function → `const` arrow ([symbol identity spike](spikes/symbol-identity.md)). | design.md resolution states, PUN-004, PUN-008 | open |
 
 ## Phase 0: Validation prototype
 
@@ -79,12 +80,13 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-003 Spike: symbol container chains from language servers
 
-- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
+- **Status:** done · **Owner:** agent · **Tier:** strong · **Estimate:** S (timebox: one session) · **Depends on:** PUN-001
 - **Description:** Check whether `vscode.executeDocumentSymbolProvider` returns enough structure to build the symbol identity in [design.md](design.md#example-theme): name, kind and the chain of enclosing symbols. Test with the TypeScript language service and with Pylance on small sample files containing classes, nested functions, overloads (TypeScript) and decorated functions (Python).
 - **Acceptance criteria:**
   - `docs/spikes/symbol-identity.md` records what each language server returns, gaps found, and whether the identity model needs to change.
   - Sample files used for the spike are kept under `test-fixtures/`.
 - **Out of scope:** changes to the schema itself. If the model needs to change, escalate.
+- **Note:** No schema change needed; the spike proposes resolution rules for overloads, pinnable symbols and readiness, and raises D-6 on kind matching. Fixtures are under `test-fixtures/symbols/`, which is excluded from lint.
 
 ### PUN-004 Core pin model
 
