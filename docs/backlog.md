@@ -24,6 +24,8 @@ Estimates are size budgets an agent can check against while working, not hours.
 
 **Spikes** are timeboxed experiments. Their deliverable is a short written finding in `docs/spikes/`, not production code. Spike code may be thrown away.
 
+Configuration and boilerplate files (package manifests, tsconfig, lint, bundler and test-runner config, lock files) do not count toward the file budget.
+
 **Escalate at 1.5×:** if an item is about to exceed 1.5 times its line or file budget, stop and escalate (see [AGENTS.md](../AGENTS.md#escalation)).
 
 ### Model tiers
@@ -55,7 +57,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-001 Scaffold the extension
 
-- **Status:** todo · **Owner:** agent · **Tier:** strong · **Estimate:** S · **Depends on:** —
+- **Status:** done · **Owner:** agent · **Tier:** strong · **Estimate:** M (re-sized from S, see note) · **Depends on:** —
 - **Description:** Create a TypeScript VS Code extension with a strict `tsconfig`, a bundler (esbuild), linting, and a test runner (`@vscode/test-cli` for integration tests, a plain unit-test runner for core code). Use npm workspaces with two packages: `packages/core` (no `vscode` imports) and `packages/extension`. Contribute a view container to the **secondary side bar**, with a `when`-clause fallback to the activity bar for editors without secondary side bar support. The container holds one `WebviewView` that shows "Punaise" and an empty-state message.
 - **Acceptance criteria:**
   - `npm install`, `npm run build`, `npm test` and `npm run lint` all succeed from a clean clone.
@@ -63,6 +65,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - The webview uses a strict Content Security Policy and has no network access.
   - `packages/core` builds and tests without `vscode` installed.
 - **Out of scope:** commands, pins, highlighting, CI configuration, publishing.
+- **Note:** Re-sized from S to M before starting: a scaffold is mostly config files (~240 lines, 17 files). The fallback switches on VS Code 1.106 via the `punaise.noSecondarySidebar` context key.
 
 ### PUN-002 Spike: theme-matched highlighting in a webview
 

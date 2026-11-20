@@ -1,0 +1,13 @@
+{
+  "name": "@punaise/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Editor-independent core of Punaise. Must never import vscode.",
+  "license": "MIT",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "tsc -p . && node --test \"dist/test/**/*.test.js\""
+  }
+}

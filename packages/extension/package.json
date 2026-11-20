@@ -1,0 +1,71 @@
+{
+  "name": "punaise",
+  "displayName": "Punaise",
+  "description": "Keep the code you are reasoning about in view.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "punaise",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "punaise",
+          "title": "Punaise",
+          "icon": "media/pin.svg",
+          "when": "!punaise.noSecondarySidebar"
+        }
+      ],
+      "activitybar": [
+        {
+          "id": "punaise-fallback",
+          "title": "Punaise",
+          "icon": "media/pin.svg",
+          "when": "punaise.noSecondarySidebar"
+        }
+      ]
+    },
+    "views": {
+      "punaise": [
+        {
+          "type": "webview",
+          "id": "punaise.pinboard",
+          "name": "Pinboard",
+          "when": "!punaise.noSecondarySidebar"
+        }
+      ],
+      "punaise-fallback": [
+        {
+          "type": "webview",
+          "id": "punaise.pinboardFallback",
+          "name": "Pinboard",
+          "when": "punaise.noSecondarySidebar"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p . && node esbuild.mjs",
+    "test": "npm run build && vscode-test"
+  },
+  "dependencies": {
+    "@punaise/core": "*"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "esbuild": "^0.28.2"
+  }
+}
