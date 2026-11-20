@@ -142,13 +142,15 @@ Every pin resolves to exactly one state:
 
 | State | Meaning | Shown as |
 | --- | --- | --- |
-| Resolved | Found at the path hint with matching name, kind and container | Normal pin |
-| Moved | Found elsewhere by name, kind and container | Pin with a "moved" badge and a one-click path update |
+| Resolved | Found at the path hint with matching name and container | Normal pin |
+| Moved | Found elsewhere by name and container | Pin with a "moved" badge and a one-click path update |
 | Renamed candidate | Not found, but a likely match exists (fingerprint, Git history) | Warning with a proposed replacement |
 | Ambiguous | Several matches and no fingerprint to decide | Warning listing the candidates |
 | Missing | No plausible match | Error, kept in the theme until removed |
 | Missing heading | Markdown heading no longer exists | Error with nearest-heading suggestion |
 | Unsupported | Language server lacks the capability | Muted pin with an explanation |
+
+Name and container chain must match exactly. `kind` is a tie-breaker, not a requirement, because kinds differ between language servers and change on refactors such as a function becoming a `const` arrow function (decision D-6, [symbol identity spike](spikes/symbol-identity.md)).
 
 ### Integrate with normal development
 

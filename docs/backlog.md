@@ -50,7 +50,7 @@ These came out of the [user journeys](journeys.md) and must be settled by a huma
 | D-3 | Should `validate` warn by default and fail only for themes marked as maintained? | Phase 2 CLI | open |
 | D-4 | Add a simple "Pin with neighbours" action in Phase 1 or 2, before full Phase 3 suggestions? | Phase 1–2 scope | open |
 | D-5 | Guardrail: a note is a short line attached to a pin, and nothing requires one. Adopt as a product principle? | All note features | open |
-| D-6 | Must a symbol's `kind` match for a pin to count as resolved, or only name and container chain, with kind as a tie-breaker? Kinds vary by language server and change on refactors such as function → `const` arrow ([symbol identity spike](spikes/symbol-identity.md)). | design.md resolution states, PUN-004, PUN-008 | open |
+| D-6 | Must a symbol's `kind` match for a pin to count as resolved, or only name and container chain, with kind as a tie-breaker? Kinds vary by language server and change on refactors such as function → `const` arrow ([symbol identity spike](spikes/symbol-identity.md)). | design.md resolution states, PUN-004, PUN-008 | decided 2026-11-20: name and container chain must match; kind is a tie-breaker |
 
 ## Phase 0: Validation prototype
 
