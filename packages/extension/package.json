@@ -52,7 +52,22 @@
           "when": "punaise.noSecondarySidebar"
         }
       ]
-    }
+    },
+    "commands": [
+      {
+        "command": "punaise.pinCurrentSymbol",
+        "title": "Pin Current Symbol",
+        "category": "Punaise"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "punaise.pinCurrentSymbol",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "build": "tsc -p . && node esbuild.mjs",

@@ -100,7 +100,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
 
 ### PUN-005 Command: Pin Current Symbol
 
-- **Status:** todo · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-004
+- **Status:** done · **Owner:** agent · **Tier:** standard · **Estimate:** M · **Depends on:** PUN-004
 - **Description:** Register `Punaise: Pin Current Symbol` with a default keybinding. It finds the smallest document symbol containing the cursor, builds a pin from it, adds it to the store, and reveals the Punaise view. Pinning the same symbol twice does not create a duplicate.
 - **Acceptance criteria:**
   - Works in TypeScript and Python files with their language servers installed.
@@ -108,6 +108,7 @@ Goal: an in-memory pinboard with live, theme-matched code in the right-hand side
   - If the cursor is not inside a symbol, the user gets a clear message.
   - Integration test covers pinning in a TypeScript fixture.
 - **Out of scope:** selection pins, rendering beyond the pin's name (PUN-006).
+- **Note:** Default keybinding `Ctrl+Alt+P` (`Cmd+Alt+P` on macOS). Symbol choice lives in core (`symbolAtPosition`) and skips parameters and locals. Retries up to 10 s while a language server starts. Python with Pylance verified manually with the PUN-003 setup; the automated test covers TypeScript only, as specified.
 
 ### PUN-006 Render pins: header, signature and code views
 

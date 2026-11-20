@@ -1,0 +1,1 @@
+Plain text has no symbol provider. Used by the PUN-005 integration test.
